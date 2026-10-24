@@ -105,8 +105,15 @@ if ! flock -w 1200 9; then
 fi
 
 git fetch origin "$DEPLOY_BRANCH"
-git checkout "$DEPLOY_BRANCH"
-git pull --ff-only origin "$DEPLOY_BRANCH"
+git cat-file -e "${DEPLOY_SHA}^{commit}" || {
+  echo "Deployment revision is not present in the production repository: $DEPLOY_SHA" >&2
+  exit 1
+}
+if ! git merge-base --is-ancestor "$DEPLOY_SHA" "origin/$DEPLOY_BRANCH"; then
+  echo "Refusing to deploy $DEPLOY_SHA because it is not on origin/$DEPLOY_BRANCH" >&2
+  exit 1
+fi
+git checkout --force --detach "$DEPLOY_SHA"
 
 ACTUAL_SHA="$(git rev-parse HEAD)"
 if [[ "$ACTUAL_SHA" != "$DEPLOY_SHA" ]]; then

@@ -179,7 +179,7 @@ jobs:
 
   deploy:
     name: Deploy to LAN server
-    runs-on: [self-hosted, linux, x64, onlinepos-lan]
+    runs-on: [self-hosted, linux, x64, pos-anton]
     needs: [backend-tests, browser-tests, validation]
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name == 'master')
     timeout-minutes: 30
@@ -191,11 +191,29 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
-      - name: Validate LAN deployment prerequisites
+      - name: Validate deployment prerequisites
         run: |
           test -d /home/matthew/OnlinePosSystem/.git
           test -f /home/matthew/OnlinePosSystem/SupportConfigFiles/.env
           test "$(stat -c '%a' /home/matthew/OnlinePosSystem/SupportConfigFiles/.env)" = 600
+          test -f /home/matthew/OnlinePosSystem/docker/docker-compose.override.yml
+          test "$(git -C /home/matthew/OnlinePosSystem remote get-url origin)" = https://github.com/the-lazy-coder-03/pos.anton.git
+
+      - name: Set application public URL
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          env_file = Path('/home/matthew/OnlinePosSystem/SupportConfigFiles/.env')
+          lines = env_file.read_text().splitlines()
+          matches = [i for i, line in enumerate(lines) if line.startswith('APP_BASE_URL=')]
+          if len(matches) != 1:
+              raise SystemExit('Expected exactly one APP_BASE_URL in the production environment')
+          lines[matches[0]] = 'APP_BASE_URL=https://pos.anton.com.ng'
+          env_file.write_text('\n'.join(lines) + '\n')
+          os.chmod(env_file, 0o600)
+          PY
 
       - name: Deploy Docker Compose stack
         id: deploy-stack
@@ -204,7 +222,7 @@ jobs:
           DEPLOY_BRANCH: master
           DEPLOY_SHA: ${{ github.sha }}
           DOPPLER_ENABLED: "false"
-          PUBLIC_HOST: crowdcam.co.za
+          PUBLIC_HOST: pos.anton.com.ng
           VERIFY_URL: http://127.0.0.1:18080/
           COMPOSE_OVERRIDE_FILE: docker/docker-compose.override.yml
           KEEP_ROLLBACK_IMAGE: "true"
@@ -213,8 +231,8 @@ jobs:
       - name: Verify LAN application smoke checks
         id: lan-smoke
         run: |
-          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:18080/ >/dev/null
-          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:18080/login >/dev/null
+          curl --fail --silent --show-error --max-time 10 https://pos.anton.com.ng/ >/dev/null
+          curl --fail --silent --show-error --max-time 10 https://pos.anton.com.ng/login >/dev/null
 
       - name: Finalize production deployment
         env:
