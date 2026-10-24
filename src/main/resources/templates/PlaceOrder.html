@@ -182,13 +182,6 @@
             font-size: 1rem;
             letter-spacing: .2px;
         }
-        .sidebar-header .hint{
-            margin-top: 6px;
-            color: var(--muted);
-            font-size: .88rem;
-            line-height: 1.25rem;
-        }
-
         .catlist{
             padding: 10px;
             overflow:auto;
@@ -775,10 +768,6 @@
             font-size:.78rem;
             font-weight:650;
             line-height:1.35;
-        }
-        .sum-info .sum-pricing{
-            color:var(--blue-800);
-            font-weight:800;
         }
         .sum-price{
             color:var(--blue-900);
@@ -3376,11 +3365,6 @@
         return optionPriceLabel(component?.price);
     }
 
-    function isCooldrinkMenuItem(item){
-        const categoryName = safeText(item?.categoryName).toLowerCase();
-        return categoryName.includes("cool drink") || categoryName.includes("cooldrink");
-    }
-
     function isCooldrinkCategory(category){
         const categoryName = safeText(category?.label ?? category?.categoryName).toLowerCase();
         return categoryName.includes("cool drink") || categoryName.includes("cooldrink");
@@ -3899,15 +3883,6 @@
         }
         out.sort((a,b)=>a.groupName.localeCompare(b.groupName));
         return out;
-    }
-
-    function getExtraPrice(detail, toppingId){
-        const raw = detail.extraPrices ?? detail.prices ?? detail.extra_prices ?? [];
-        if (!Array.isArray(raw)) return 0;
-        const id = Number(toppingId);
-        const found = raw.find(x => Number(x.toppingId ?? x.id ?? x.topping_id) === id);
-        const price = found ? (found.extraPrice ?? found.price ?? found.extra_price ?? 0) : 0;
-        return Number(price || 0);
     }
 
     function getExtraPriceForSort(detail, toppingId){

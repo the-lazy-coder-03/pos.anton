@@ -4,7 +4,6 @@ import org.example.onlinepossystem.ordering.api.CustomerOrderSummary;
 import org.example.onlinepossystem.ordering.dto.OrderResponseDTO;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

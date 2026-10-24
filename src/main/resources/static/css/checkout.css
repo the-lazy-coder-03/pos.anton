@@ -56,7 +56,6 @@ a { color: inherit; }
 .select-option small, .payment-option small { color: var(--color-text-secondary); font-size: .8rem; }
 .option-mark { width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center; color: var(--color-blue-dark); background: var(--blue-100); border-radius: 10px; font-weight: 950; }
 .select-option.active .option-mark { color: var(--color-surface); background: var(--color-red); }
-.selection-hint { margin: 10px 2px 0; color: var(--muted); font-size: .8rem; font-weight: 700; }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form-row-address { grid-template-columns: minmax(120px,.42fr) 1fr; }
@@ -67,10 +66,9 @@ a { color: inherit; }
 .form-group input:focus { border-color: var(--blue-650); box-shadow: 0 0 0 3px rgba(var(--color-blue-rgb),.12); }
 .form-group input:read-only { color: var(--muted); background: var(--color-page); cursor: not-allowed; }
 .form-group input:user-invalid { border-color: var(--danger); }
-.field-hint { display: block; margin-top: 5px; color: var(--muted); font-size: .75rem; }
 .estate-access { min-width: 0; margin: 2px 0 0; padding: 10px 16px 0; background: var(--blue-100); border: 1px solid var(--blue-200); border-radius: 12px; }
 .estate-access legend { padding: 0 5px; color: var(--blue-950); font-size: .88rem; font-weight: 900; }
-.estate-access .field-hint, .estate-access label span { color: var(--color-text-secondary); }
+.estate-access label span { color: var(--color-text-secondary); }
 #deliveryFields[hidden] { display: none; }
 .payment-card { padding-bottom: 22px; }
 .payment-option { padding: 15px 16px; display: flex; align-items: center; gap: 12px; background: var(--blue-100); border: 1px solid var(--blue-200); border-radius: 12px; }
@@ -100,7 +98,6 @@ a { color: inherit; }
 .button-secondary { color: var(--blue-800); background: var(--blue-100); border: 1px solid var(--blue-200); }
 .button:disabled { opacity: .55; cursor: not-allowed; transform: none; }
 .place-order { width: 100%; }
-.terms { margin: 12px 8px 0; color: var(--muted); font-size: .73rem; line-height: 1.4; text-align: center; }
 .empty-cart { padding: 30px 8px 22px; color: var(--muted); text-align: center; }
 .empty-cart strong { color: var(--blue-900); font-size: 1.05rem; }
 .empty-cart p { margin: 7px 0 16px; font-size: .86rem; }

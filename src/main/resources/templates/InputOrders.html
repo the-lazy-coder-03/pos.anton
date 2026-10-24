@@ -148,14 +148,6 @@
             background-color: var(--color-blue);
         }
 
-        .rejectBtn {
-            background-color: var(--color-border);
-        }
-
-        .rejectBtn:hover {
-            background-color: var(--color-disabled);
-        }
-
         .homeBtn {
             background-color: var(--color-success);
         }
@@ -418,18 +410,6 @@
         orderDiv.appendChild(PosOrderRenderer.orderCard(order, {
             onStatusChange: status => updateOrderStatus(order.id, status).then(showSingleOrder)
         }));
-    }
-
-    async function prepareOrder() {
-        const order = branchOrders[orderIndex];
-        await updateOrderStatus(order.id, 'Preparing');
-        showSingleOrder();
-    }
-
-    async function completeOrder() {
-        const order = branchOrders[orderIndex];
-        await updateOrderStatus(order.id, 'Completed');
-        showSingleOrder();
     }
 
 

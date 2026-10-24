@@ -9,9 +9,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
-
 @Service
 @org.springframework.transaction.annotation.Transactional
 public class StaffService implements StaffDirectory, StaffOperations {
@@ -26,39 +23,6 @@ public class StaffService implements StaffDirectory, StaffOperations {
         this.passwordEncoder = passwordEncoder;
     }
 
-        /* Unused legacy PIN/code authentication; /api/staff/login is retired.
-    @Override
-    public Optional<String> authenticate(String pin, String code) {
-        if (code != null && !code.isEmpty()) {
-            return Optional.ofNullable(authenticateByCode(code));
-        }
-        if (pin != null && !pin.isEmpty()) {
-            return Optional.ofNullable(authenticateStaff(pin));
-        }
-        return Optional.empty();
-    }
-
-    public String authenticateStaff(String enteredPin) {
-        List<Staff> allStaff = staffRepository.findAll();
-        for (Staff staff : allStaff) {
-            if (staff.getPinHash() != null && passwordEncoder.matches(enteredPin, staff.getPinHash())) {
-                return staff.getBranch();
-            }
-        }
-        return null;
-    }
-
-    public String authenticateByCode(String code) {
-        if (code == null || code.length() != 16) {
-            return null;
-        }
-
-        return staffRepository.findByBranchCode(code)
-                .map(Staff::getBranch)
-                .orElse(null);
-    }
-    */
-
     /**
      * Create a new staff member with a hashed PIN and optional branch code.
      */
@@ -68,12 +32,6 @@ public class StaffService implements StaffDirectory, StaffOperations {
         Staff staff = new Staff(name, branch, hashedPin, branchCode);
         return toAccount(staffRepository.save(staff));
     }
-
-    /* Unused convenience overload; active callers use the branch-code form.
-    public StaffAccount createStaff(String name, String branch, String plainPin) {
-        return createStaff(name, branch, plainPin, null);
-    }
-    */
 
     /**
      * Update or create a staff member.

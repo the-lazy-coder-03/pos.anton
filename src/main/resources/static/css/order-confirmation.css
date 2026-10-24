@@ -79,7 +79,6 @@ a { color: inherit; }
 .summary-line strong { color: var(--blue-950); }
 .summary-total { margin-top: 8px; padding-top: 16px; color: var(--blue-900); border-top: 1px solid var(--line); font-size: 1.25rem; font-weight: 950; }
 .summary-total strong { color: var(--blue-650); }
-.summary-note { margin: 13px 0 0; color: var(--muted); font-size: .78rem; line-height: 1.4; }
 
 .confirmation-actions { display: grid; gap: 10px; }
 .button { min-height: 46px; padding: 11px 15px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 12px; font-weight: 900; text-decoration: none; transition: transform .15s ease, background .15s ease; }
