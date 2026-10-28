@@ -15,6 +15,9 @@ public class Branch {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     public Branch() {}
 
     public Branch(Integer id, String name) {
@@ -24,6 +27,9 @@ public class Branch {
 
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 }

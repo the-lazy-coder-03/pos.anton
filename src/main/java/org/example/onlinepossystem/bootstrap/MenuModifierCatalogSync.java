@@ -10,7 +10,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 @Component
-@org.springframework.context.annotation.Profile({"postgres-test", "migrate"})
+@org.springframework.context.annotation.Profile("postgres-test")
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class MenuModifierCatalogSync implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(MenuModifierCatalogSync.class);

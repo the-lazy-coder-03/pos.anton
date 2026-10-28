@@ -1,9 +1,7 @@
 package org.example.onlinepossystem;
 
 import org.example.onlinepossystem.bootstrap.MigrationSqlRunner;
-import org.example.onlinepossystem.bootstrap.MenuModifierCatalogSync;
 
-import org.example.onlinepossystem.catalog.service.CatalogMaintenanceService;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -17,6 +15,6 @@ import org.springframework.context.annotation.Profile;
 @Profile("migrate")
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class, UserDetailsServiceAutoConfiguration.class})
 @EntityScan("org.example.onlinepossystem")
-@Import({MigrationSqlRunner.class, MenuModifierCatalogSync.class, CatalogMaintenanceService.class})
+@Import(MigrationSqlRunner.class)
 public class MigrationConfiguration {
 }

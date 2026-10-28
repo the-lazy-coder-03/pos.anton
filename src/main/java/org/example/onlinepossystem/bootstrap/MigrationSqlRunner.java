@@ -89,7 +89,14 @@ public class MigrationSqlRunner implements CommandLineRunner {
     }
 
     private void applyCatalogMigration(Connection connection) throws Exception {
-        applyMigration(connection, CATALOG_MIGRATION_ID, CATALOG_MIGRATION_RESOURCE, false, () -> {});
+        // Existing installations retain and validate their original migration history.
+        if (findLastAppliedChecksum(connection, CATALOG_MIGRATION_ID) != null) {
+            String expected = sha256(readResource(CATALOG_MIGRATION_RESOURCE));
+            if (!expected.equals(findLastAppliedChecksum(connection, CATALOG_MIGRATION_ID)))
+                throw new IllegalStateException("Legacy catalogue migration changed; explicit upgrade required");
+            return;
+        }
+        applyMigration(connection, "db/empty-schema-v1.sql", "sql/empty-schema-v1.sql", true, () -> {});
     }
 
     private void applyRlsMigration(Connection connection) throws Exception {
@@ -110,8 +117,11 @@ public class MigrationSqlRunner implements CommandLineRunner {
                 () -> setRuntimeRole(connection));
         applyMigration(connection, RLS_DRIVER_RATES_MIGRATION_ID, RLS_DRIVER_RATES_MIGRATION_RESOURCE, true,
                 () -> setRuntimeRole(connection));
-        applyMigration(connection, CUSTOMER_ACCOUNT_MIGRATION_ID, CUSTOMER_ACCOUNT_MIGRATION_RESOURCE, true,
-                () -> {});
+        if (findLastAppliedChecksum(connection, CATALOG_MIGRATION_ID) != null)
+            applyMigration(connection, CUSTOMER_ACCOUNT_MIGRATION_ID, CUSTOMER_ACCOUNT_MIGRATION_RESOURCE, true,
+                    () -> {});
+        applyMigration(connection, "db/commercial-identity-v1.sql", "sql/commercial-identity-v1.sql", true,
+                () -> setRuntimeRole(connection));
         synchronizeContextSecret(connection);
     }
 

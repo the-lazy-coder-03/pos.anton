@@ -37,7 +37,8 @@ public class BranchService implements BranchLookup {
 
     @Override
     public List<BranchView> findAll() {
-        return branchRepository.findAll().stream().map(this::toView).toList();
+        return branchRepository.findAll().stream().filter(Branch::isActive)
+                .sorted(java.util.Comparator.comparing(Branch::getId)).map(this::toView).toList();
     }
 
     @Override

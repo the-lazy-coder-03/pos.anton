@@ -91,6 +91,7 @@ class RlsPostgresIT {
              var statement = connection.createStatement()) {
             statement.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public");
         }
+        seedLegacySchemaFixture();
         migrate();
         // Reapplying uses recorded checksums and does not duplicate policies or data.
         migrate();
@@ -105,6 +106,20 @@ class RlsPostgresIT {
         transaction = new TransactionTemplate(activeManager);
         mvc = MockMvcBuilders.webAppContextSetup((WebApplicationContext) application).apply(springSecurity()).build();
         accounts = application.getBean(UserDetailsService.class);
+    }
+
+    // This suite verifies compatibility with the existing restaurant deployment.
+    // Fresh commercial installs use empty-schema-v1 and are tested separately.
+    private void seedLegacySchemaFixture() throws Exception {
+        String sql=new org.springframework.core.io.ClassPathResource("sql/migration.sql").getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        try(var connection=ownerConnection();var statement=connection.createStatement()) {
+            statement.execute(sql);
+            statement.execute("CREATE TABLE public.app_migration_state(id text PRIMARY KEY,flag_value text NOT NULL,applied_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+            try(var insert=connection.prepareStatement("INSERT INTO public.app_migration_state(id,flag_value) VALUES('migration.sql',?)")) {
+                insert.setString(1,java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(sql.getBytes(java.nio.charset.StandardCharsets.UTF_8))));
+                insert.executeUpdate();
+            }
+        }
     }
 
     private void migrate() {
@@ -155,7 +170,7 @@ class RlsPostgresIT {
     }
 
     private String[] runtimeArguments() {
-        return new String[]{"--spring.profiles.active=rls-test", "--spring.config.import=",
+        return new String[]{"--app.business-management.enabled=true", "--spring.profiles.active=rls-test", "--spring.config.import=",
                 "--spring.datasource.url=" + jdbcUrl, "--spring.datasource.username=" + runtime,
                 "--spring.datasource.password=" + password, "--spring.datasource.driver-class-name=org.postgresql.Driver",
                 "--spring.datasource.hikari.maximum-pool-size=1", "--spring.datasource.hikari.minimum-idle=1",
@@ -1300,4 +1315,35 @@ class RlsPostgresIT {
             throw new SQLException("Test initialization failure", "42501");
         }
     }
+    @Test @Order(14)
+    void businessOwnerCreatesThirdStoreWithoutChangingOrdersOrGrantingManagersAccess() throws Exception {
+        var ownerAccount=accounts.loadUserByUsername("super@example.com");
+        var managerAccount=accounts.loadUserByUsername("one@example.com");
+        mvc.perform(get("/api/business-management/stores").with(user(managerAccount))).andExpect(status().isForbidden());
+        UUID business;
+        long orders;
+        try(var connection=ownerConnection();var statement=connection.createStatement()) {
+            statement.executeUpdate("INSERT INTO public.business_owner(account_id) VALUES("+namedSuperAdmin+")");
+            try(var rows=statement.executeQuery("SELECT business_id FROM public.business")){rows.next();business=rows.getObject(1,UUID.class);}
+            try(var rows=statement.executeQuery("SELECT count(*) FROM public.customer_order")){rows.next();orders=rows.getLong(1);}
+        }
+        UUID command=UUID.randomUUID();
+        String body=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(Map.of("commandId",command,"businessId",business,
+            "values",Map.of("name","Independent third store","code","THIRD","active",true)));
+        var response=mvc.perform(post("/api/business-management/stores").with(user(ownerAccount)).with(csrf()).contentType("application/json").content(body))
+            .andExpect(status().isOk()).andReturn();
+        var created=new com.fasterxml.jackson.databind.ObjectMapper().readTree(response.getResponse().getContentAsString());
+        assertThat(created.path("branch_id").asInt()).isGreaterThan(2);
+        mvc.perform(post("/api/business-management/stores").with(user(ownerAccount)).with(csrf()).contentType("application/json").content(body))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.store_uuid").value(created.path("store_uuid").asText()));
+        mvc.perform(post("/api/business-management/stores").with(user(ownerAccount)).with(csrf()).contentType("application/json")
+            .content(body.replace(business.toString(),UUID.randomUUID().toString()))).andExpect(status().isForbidden());
+        try(var connection=ownerConnection();var statement=connection.createStatement()) {
+            try(var rows=statement.executeQuery("SELECT count(*) FROM public.customer_order")){rows.next();assertThat(rows.getLong(1)).isEqualTo(orders);}
+            try(var rows=statement.executeQuery("SELECT count(*) FROM public.business_management_audit WHERE command_id='"+command+"'")){rows.next();assertThat(rows.getInt(1)).isEqualTo(1);}
+            statement.executeUpdate("UPDATE public.business_owner SET enabled=false WHERE account_id="+namedSuperAdmin);
+        }
+        mvc.perform(get("/api/business-management/stores").with(user(ownerAccount))).andExpect(status().isForbidden());
+    }
+
 }
